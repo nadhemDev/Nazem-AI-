@@ -48,8 +48,8 @@ export default function SplashScreen({ onEnter }: SplashScreenProps) {
       </div>
 
       {/* 3D Logo */}
-      <div className="w-[500px] h-[220px] relative">
-        <NazemLogo3D />
+      <div className="w-[500px] h-[220px] relative flex justify-center items-center">
+        <img src="/logo.png" alt="Nazem AI" className="w-full h-full object-contain drop-shadow-2xl" />
       </div>
 
       {/* Tagline */}

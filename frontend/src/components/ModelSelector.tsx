@@ -59,10 +59,10 @@ export default function ModelSelector() {
 
   return (
     <div className="relative group">
-      <div className="flex items-center gap-2 bg-slate-800/60 hover:bg-slate-800
-        border border-white/8 hover:border-emerald-500/30
+      <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-800
+        border border-slate-300 dark:border-white/8 hover:border-nazem-teal/50 dark:hover:border-nazem-teal/30
         rounded-lg pl-3 pr-2 py-1.5 cursor-pointer transition-all duration-200">
-        <Cpu size={14} className="text-emerald-500 flex-shrink-0" />
+        <Cpu size={14} className="text-nazem-teal flex-shrink-0" />
         <span className={`text-sm font-medium ${current.color}`}>{current.label}</span>
         <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${current.badgeColor}`}>
           {current.badge}
@@ -72,7 +72,7 @@ export default function ModelSelector() {
 
       {/* Dropdown */}
       <div className="absolute top-full left-0 mt-1.5 w-72 py-1.5 rounded-xl
-        bg-slate-900 border border-white/8 shadow-2xl shadow-black/50
+        bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/8 shadow-2xl shadow-black/10 dark:shadow-black/50
         opacity-0 invisible group-hover:opacity-100 group-hover:visible
         translate-y-1 group-hover:translate-y-0 transition-all duration-200 z-50">
 
@@ -84,8 +84,8 @@ export default function ModelSelector() {
           <button
             key={m.value}
             onClick={() => setActiveModel(m.value)}
-            className={`w-full text-left px-3 py-2.5 transition-colors hover:bg-white/5
-              ${m.value === activeModel ? "bg-emerald-500/5" : ""}`}
+            className={`w-full text-left px-3 py-2.5 transition-colors hover:bg-slate-100 dark:hover:bg-white/5
+              ${m.value === activeModel ? "bg-nazem-teal/10 dark:bg-nazem-teal/5" : ""}`}
           >
             <div className="flex items-center gap-2.5">
               {m.value === activeModel && (

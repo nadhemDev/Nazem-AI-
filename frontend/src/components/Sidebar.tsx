@@ -3,7 +3,7 @@
 import { useStore } from "@/store/useStore";
 import {
   MessageSquare, Plus, Settings, ChevronLeft, ChevronRight,
-  LogIn, LogOut, Sparkles, Folder, Clock, Star, Trash2, MoreHorizontal
+  LogIn, LogOut, Sparkles, Folder, Clock, Star, Trash2, MoreHorizontal, Sun, Moon
 } from "lucide-react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
@@ -18,7 +18,7 @@ const MOCK_SESSIONS = [
 ];
 
 export default function Sidebar() {
-  const { isSidebarOpen, toggleSidebar } = useStore();
+  const { isSidebarOpen, toggleSidebar, theme, toggleTheme } = useStore();
   const { data: session } = useSession();
 
   const today = MOCK_SESSIONS.filter((s) => s.category === "today");
@@ -29,13 +29,13 @@ export default function Sidebar() {
     <>
       {/* Sidebar */}
       <div
-        className={`flex flex-col border-r border-white/5 transition-all duration-300 h-full relative z-10
+        className={`flex flex-col border-r border-slate-200 dark:border-white/5 transition-all duration-300 h-full relative z-10
           ${isSidebarOpen ? "w-72" : "w-0"} overflow-hidden
-          bg-gradient-to-b from-[#080c14] via-[#090d16] to-[#0a1020]`}
+          bg-white dark:bg-gradient-to-b dark:from-[#080c14] dark:via-[#090d16] dark:to-[#0a1020]`}
       >
         {/* Logo 3D */}
-        <div className="h-40 min-w-[18rem] relative flex-shrink-0">
-          <NazemLogo3D />
+        <div className="h-40 min-w-[18rem] relative flex-shrink-0 flex justify-center items-center">
+          <img src="/logo.png" alt="Nazem AI" className="w-full h-full object-contain p-6 drop-shadow-lg" />
           {/* Glowing underline */}
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-px bg-gradient-to-r from-transparent via-emerald-500 to-transparent" />
         </div>
@@ -95,16 +95,16 @@ export default function Sidebar() {
         </div>
 
         {/* Bottom: settings + user */}
-        <div className="min-w-[18rem] border-t border-white/5">
+        <div className="min-w-[18rem] border-t border-slate-200 dark:border-white/5">
           {/* Settings row */}
           <div className="px-4 py-2 flex items-center justify-between">
-            <button className="flex items-center gap-2 text-slate-500 hover:text-slate-300 text-xs transition-colors py-1">
+            <button className="flex items-center gap-2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 text-xs transition-colors py-1">
               <Settings size={14} />
               <span>Paramètres</span>
             </button>
-            <button className="flex items-center gap-2 text-slate-500 hover:text-slate-300 text-xs transition-colors py-1">
-              <Folder size={14} />
-              <span>Workspace</span>
+            <button onClick={toggleTheme} className="flex items-center gap-2 text-slate-500 hover:text-nazem-pink dark:hover:text-nazem-teal text-xs transition-colors py-1">
+              {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />} 
+              <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
             </button>
           </div>
 
@@ -116,8 +116,8 @@ export default function Sidebar() {
                   <img src={session.user.image} alt="Avatar"
                     className="w-9 h-9 rounded-full ring-2 ring-emerald-500/40" />
                 ) : (
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-700
-                    flex items-center justify-center text-sm font-bold text-white ring-2 ring-emerald-500/40">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-nazem-pink to-nazem-teal
+                    flex items-center justify-center text-sm font-bold text-white ring-2 ring-nazem-teal/40">
                     {session.user?.name?.[0] || "U"}
                   </div>
                 )}

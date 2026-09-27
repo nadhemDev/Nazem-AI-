@@ -119,7 +119,7 @@ export default function ChatPanel() {
       </div>
 
       {/* Top bar */}
-      <div className="relative z-10 h-14 border-b border-white/5 flex items-center px-5 gap-4 bg-[#090d16]/80 backdrop-blur-md">
+      <div className="relative z-50 h-14 border-b border-white/5 flex items-center px-5 gap-4 bg-[#090d16]/80 backdrop-blur-md">
         <ModelSelector />
         <div className="flex-1" />
         {/* Ollama status */}
@@ -152,10 +152,10 @@ export default function ChatPanel() {
             {/* Avatar */}
             <div className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold shadow-lg
               ${msg.sender === "user"
-                ? "bg-gradient-to-br from-indigo-500 to-purple-600"
+                ? "bg-nazem-teal"
                 : msg.sender === "system"
-                ? "bg-gradient-to-br from-rose-700 to-red-900"
-                : "bg-gradient-to-br from-emerald-600 to-teal-700"
+                ? "bg-rose-500"
+                : "bg-nazem-pink"
               }`}>
               {msg.sender === "user" ? (
                 <User size={16} className="text-white" />
@@ -173,10 +173,10 @@ export default function ChatPanel() {
               </span>
               <div className={`relative rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-lg
                 ${msg.sender === "user"
-                  ? "bg-gradient-to-br from-indigo-600/80 to-purple-700/80 text-white border border-indigo-500/30 rounded-tr-sm"
+                  ? "bg-nazem-teal text-white rounded-tr-sm"
                   : msg.sender === "system"
-                  ? "bg-rose-950/50 text-rose-300 border border-rose-800/40 rounded-tl-sm"
-                  : "bg-slate-800/70 text-slate-200 border border-white/5 rounded-tl-sm backdrop-blur-sm"
+                  ? "bg-rose-100 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/40 rounded-tl-sm"
+                  : "bg-slate-100 dark:bg-slate-800/70 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-white/5 rounded-tl-sm backdrop-blur-sm"
                 }`}>
                 <pre className="whitespace-pre-wrap font-sans break-words">{msg.content}</pre>
 
@@ -218,7 +218,7 @@ export default function ChatPanel() {
       </div>
 
       {/* Input area */}
-      <div className="relative z-10 px-4 py-4 bg-gradient-to-t from-[#090d16] via-[#090d16]/95 to-transparent">
+      <div className="relative z-10 px-4 py-4 bg-gradient-to-t from-white via-white/95 to-transparent dark:from-[#090d16] dark:via-[#090d16]/95">
         <form
           onSubmit={handleSubmit}
           className="max-w-4xl mx-auto relative bg-slate-900/80 backdrop-blur-md border border-white/8
@@ -233,7 +233,7 @@ export default function ChatPanel() {
             placeholder="Posez une question ou demandez à Nazem de modifier du code… (Shift+Entrée pour saut de ligne)"
             rows={1}
             disabled={isLoading}
-            className="w-full bg-transparent text-slate-200 placeholder-slate-500 px-5 pt-4 pb-2
+            className="w-full bg-transparent text-slate-800 dark:text-slate-200 placeholder-slate-500 px-5 pt-4 pb-2
               focus:outline-none resize-none text-sm leading-relaxed"
           />
           <div className="flex items-center justify-between px-4 pb-3 pt-1">
@@ -246,7 +246,7 @@ export default function ChatPanel() {
                 type="submit"
                 disabled={!input.trim() || isLoading}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200
-                  bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500
+                  bg-gradient-to-r from-nazem-pink to-nazem-teal hover:opacity-90
                   text-white disabled:opacity-30 disabled:cursor-not-allowed
                   shadow-lg shadow-emerald-900/30 hover:shadow-emerald-500/20 hover:scale-105 active:scale-95"
               >
