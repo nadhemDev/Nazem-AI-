@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useStore } from "@/store/useStore";
-import { Send, Bot, User, Zap, AlertCircle, Copy, Check, RefreshCw, Terminal } from "lucide-react";
+import { Send, Bot, User, Zap, AlertCircle, Copy, Check, RefreshCw, Terminal, Plus, Paperclip, Triangle, Globe, Image as ImageIcon, Mic, ChevronDown } from "lucide-react";
 import ModelSelector from "./ModelSelector";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -25,9 +25,9 @@ function CopyCodeButton({ code }: { code: string }) {
 export default function ChatPanel() {
   const { messages, addMessage, activeModel } = useStore();
   const [input, setInput] = useState("");
-
   const [isLoading, setIsLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [isAttachMenuOpen, setIsAttachMenuOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -136,12 +136,11 @@ export default function ChatPanel() {
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-500/3 rounded-full blur-3xl" />
       </div>
 
-      {/* Top bar */}
-      <div className="relative z-50 h-14 border-b border-white/5 flex items-center px-5 gap-4 bg-[#090d16]/80 backdrop-blur-md">
-        <ModelSelector />
+      {/* Top bar (Empty or removed, we can just keep the Ollama status) */}
+      <div className="relative z-50 h-12 border-b border-white/5 flex items-center px-5 gap-4 bg-[#090d16]/80 backdrop-blur-md">
         <div className="flex-1" />
         {/* Ollama status */}
-        <div className="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full
+        <div className="flex items-center gap-2 text-[11px] font-medium px-3 py-1.5 rounded-full
           border border-emerald-500/20 bg-emerald-500/5 text-emerald-400">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           Ollama Online
@@ -165,8 +164,29 @@ export default function ChatPanel() {
           </div>
         )}
 
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex gap-3 group ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
+        {messages.map((msg) => {
+          let displayContent = msg.content;
+          if (msg.sender === "nazem") {
+            // 1. Process DeepSeek think tags
+            displayContent = displayContent.replace(/<think>([\s\S]*?)(?:<\/think>|$)/g, '\n\n> 🧠 **Raisonnement (Deep Think) :**\n> $1\n\n');
+            
+            // 2. Wrap raw unformatted JSON tool calls in markdown blocks so the renderer catches them
+            const trimmed = displayContent.trim();
+            if (trimmed.startsWith('{') && trimmed.endsWith('}') && trimmed.includes('"name"') && trimmed.includes('tool_')) {
+              try {
+                const parsed = JSON.parse(trimmed);
+                if (parsed.name && typeof parsed.name === 'string' && parsed.name.startsWith('tool_')) {
+                  displayContent = `\`\`\`json\n${trimmed}\n\`\`\``;
+                }
+              } catch (e) {
+                // Not perfectly valid JSON yet (maybe streaming), but if it heavily looks like a tool call, we could still wrap it.
+                // For safety, we only wrap valid JSON.
+              }
+            }
+          }
+
+          return (
+            <div key={msg.id} className={`flex gap-3 group ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
             {/* Avatar */}
             <div className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center shadow-lg
               ${msg.sender === "user"
@@ -299,7 +319,7 @@ export default function ChatPanel() {
                         ),
                       }}
                     >
-                      {msg.content.replace(/<think>([\s\S]*?)(?:<\/think>|$)/g, '\n\n> 🧠 **Raisonnement (Deep Think) :**\n> $1\n\n')}
+                      {displayContent}
                     </ReactMarkdown>
                   </div>
                 )}
@@ -317,21 +337,28 @@ export default function ChatPanel() {
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
 
         {/* Loading indicator */}
         {isLoading && (
-          <div className="flex gap-4">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center shadow-lg">
-              <Bot size={16} className="text-white" />
+          <div className="flex gap-4 items-start animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="relative">
+              <div className="absolute inset-0 bg-emerald-400 rounded-xl animate-ping opacity-20" />
+              <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/30 z-10">
+                <Bot size={16} className="text-white" />
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-[11px] font-semibold text-slate-500 mb-1.5 px-1">Nazem</span>
-              <div className="bg-slate-800/70 border border-white/5 rounded-2xl rounded-tl-sm px-5 py-4">
-                <div className="flex gap-1.5 items-center">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce [animation-delay:0ms]" />
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce [animation-delay:150ms]" />
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce [animation-delay:300ms]" />
+            <div className="flex flex-col gap-1 w-[260px]">
+              <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest px-1 animate-pulse">
+                Nazem réfléchit...
+              </span>
+              <div className="bg-slate-800/80 border border-emerald-500/20 rounded-2xl rounded-tl-sm p-4 relative overflow-hidden shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent w-full h-full animate-pulse" />
+                <div className="flex gap-2 items-center relative z-10">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-[bounce_1s_infinite_0ms] shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-[bounce_1s_infinite_200ms] shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-[bounce_1s_infinite_400ms] shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
                 </div>
               </div>
             </div>
@@ -342,47 +369,89 @@ export default function ChatPanel() {
       </div>
 
       {/* Input area */}
-      <div className="relative z-10 px-4 py-4 bg-gradient-to-t from-white via-white/95 to-transparent dark:from-[#090d16] dark:via-[#090d16]/95">
-        <form
-          onSubmit={handleSubmit}
-          className="max-w-4xl mx-auto relative bg-slate-900/80 backdrop-blur-md border border-white/8
-            rounded-2xl overflow-hidden shadow-2xl shadow-black/40
-            focus-within:border-emerald-500/30 focus-within:shadow-emerald-500/5 transition-all duration-300"
-        >
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={autoResize}
-            onKeyDown={handleKeyDown}
-            placeholder="Posez une question ou demandez à Nazem de modifier du code… (Shift+Entrée pour saut de ligne)"
-            rows={1}
-            disabled={isLoading}
-            className="w-full bg-transparent text-slate-800 dark:text-slate-200 placeholder-slate-500 px-5 pt-4 pb-2
-              focus:outline-none resize-none text-sm leading-relaxed"
-          />
-          <div className="flex items-center justify-between px-4 pb-3 pt-1">
-            <span className="text-[10px] text-slate-600">Shift+Entrée pour un saut de ligne</span>
-            <div className="flex gap-2 items-center">
-              {isLoading && (
-                <RefreshCw size={14} className="text-slate-500 animate-spin" />
-              )}
-              <button
-                type="submit"
-                disabled={!input.trim() || isLoading}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200
-                  bg-gradient-to-r from-nazem-pink to-nazem-teal hover:opacity-90
-                  text-white disabled:opacity-30 disabled:cursor-not-allowed
-                  shadow-lg shadow-emerald-900/30 hover:shadow-emerald-500/20 hover:scale-105 active:scale-95"
-              >
-                <Send size={14} />
-                <span>Envoyer</span>
+      <div className="relative z-10 px-4 py-4 bg-white dark:bg-[#131314]">
+        <div className="max-w-4xl mx-auto relative">
+          
+          {/* Attach Menu Popover */}
+          {isAttachMenuOpen && (
+            <div className="absolute bottom-full mb-3 left-0 w-64 bg-white dark:bg-[#282a2c] border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl py-2 z-50 flex flex-col">
+              <button className="flex items-center gap-4 px-4 py-3 hover:bg-slate-100 dark:hover:bg-white/5 text-sm text-slate-700 dark:text-slate-200 transition-colors">
+                <Paperclip size={18} className="text-slate-500" /> Importer des fichiers
+              </button>
+              <button className="flex items-center gap-4 px-4 py-3 hover:bg-slate-100 dark:hover:bg-white/5 text-sm text-slate-700 dark:text-slate-200 transition-colors">
+                <Triangle size={18} className="text-slate-500" /> Ajouter depuis Drive
+              </button>
+              <div className="h-px bg-slate-200 dark:bg-white/10 my-1" />
+              <button className="flex items-center gap-4 px-4 py-3 hover:bg-slate-100 dark:hover:bg-white/5 text-sm text-slate-700 dark:text-slate-200 transition-colors">
+                <Globe size={18} className="text-slate-500" /> Rechercher sur Google
+              </button>
+              <button className="flex items-center gap-4 px-4 py-3 hover:bg-slate-100 dark:hover:bg-white/5 text-sm text-slate-700 dark:text-slate-200 transition-colors">
+                <ImageIcon size={18} className="text-slate-500" /> Créer une image
               </button>
             </div>
-          </div>
-        </form>
-        <p className="text-center text-[10px] text-slate-700 mt-2">
-          Nazem peut faire des erreurs. Vérifiez les modifications importantes.
-        </p>
+          )}
+
+          <form
+            onSubmit={handleSubmit}
+            className="bg-[#f0f4f9] dark:bg-[#1e1f20] rounded-[32px] px-2 py-1.5 flex items-end gap-2 border border-transparent focus-within:shadow-md transition-all duration-300"
+          >
+            {/* + Button */}
+            <button
+              type="button"
+              onClick={() => setIsAttachMenuOpen(!isAttachMenuOpen)}
+              className="p-3 mb-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-colors flex-shrink-0"
+            >
+              <Plus size={22} className={isAttachMenuOpen ? "rotate-45 transition-transform" : "transition-transform"} />
+            </button>
+
+            {/* Textarea */}
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={autoResize}
+              onKeyDown={handleKeyDown}
+              placeholder="Demander à Nazem..."
+              rows={1}
+              disabled={isLoading}
+              className="flex-1 bg-transparent border-none outline-none resize-none py-3.5 text-slate-800 dark:text-slate-200 placeholder-slate-500 text-base"
+              style={{ minHeight: "52px", maxHeight: "200px" }}
+            />
+
+            {/* Right Controls */}
+            <div className="flex items-center gap-1 pb-1 flex-shrink-0">
+              
+              {/* Active Model Name Pill (via ModelSelector) */}
+              <div className="hidden sm:block mr-1">
+                <ModelSelector />
+              </div>
+
+              {/* Mic Icon */}
+              {!input.trim() && !isLoading && (
+                <button type="button" className="p-3 mr-1 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-colors">
+                  <Mic size={20} />
+                </button>
+              )}
+
+              {/* Send or Loading */}
+              {(input.trim() || isLoading) && (
+                <button
+                  type="submit"
+                  disabled={isLoading || !input.trim()}
+                  className="p-3 mr-1 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-colors disabled:opacity-50"
+                >
+                  {isLoading ? (
+                    <RefreshCw size={20} className="animate-spin text-emerald-500" />
+                  ) : (
+                    <Send size={20} className="text-emerald-500" />
+                  )}
+                </button>
+              )}
+            </div>
+          </form>
+          <p className="text-center text-xs text-slate-500 dark:text-slate-400 mt-4">
+            Nazem peut faire des erreurs. Vérifiez les modifications importantes.
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -42,30 +42,19 @@ export default function ModelSelector() {
   return (
     <div className="relative group">
       {/* Trigger button */}
-      <div className="flex items-center gap-2 bg-slate-800/60 hover:bg-slate-800
-        border border-white/8 hover:border-emerald-500/30
-        rounded-lg pl-3 pr-2 py-1.5 cursor-pointer transition-all duration-200">
-        {loading ? (
-          <Loader2 size={14} className="text-slate-500 animate-spin" />
-        ) : ollamaOnline === false ? (
+      <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors text-sm font-medium">
+        {ollamaOnline === false ? (
           <WifiOff size={14} className="text-rose-500 flex-shrink-0" />
-        ) : (
-          <Cpu size={14} className="text-emerald-500 flex-shrink-0" />
-        )}
-        <span className={`text-sm font-medium ${current.color}`}>
-          {loading ? "Chargement..." : current.label}
+        ) : null}
+        <span className={`text-sm font-medium ${ollamaOnline === false ? "text-rose-500" : ""}`}>
+          {loading ? "Chargement..." : current.label.split(" · ")[0]}
         </span>
-        {!loading && (
-          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${current.badgeColor}`}>
-            {current.badge}
-          </span>
-        )}
-        <ChevronDown size={12} className="text-slate-500 ml-1" />
+        <ChevronDown size={14} className="opacity-60" />
       </div>
 
-      {/* Dropdown */}
-      <div className="absolute top-full left-0 mt-1.5 w-72 py-1.5 rounded-xl
-        bg-slate-900 border border-white/8 shadow-2xl shadow-black/50
+      {/* Dropdown (Opens Upwards) */}
+      <div className="absolute bottom-full right-0 mb-2 w-72 py-1.5 rounded-xl
+        bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/8 shadow-2xl shadow-black/20 dark:shadow-black/50
         opacity-0 invisible group-hover:opacity-100 group-hover:visible
         translate-y-1 group-hover:translate-y-0 transition-all duration-200 z-50">
 
