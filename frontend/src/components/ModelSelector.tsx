@@ -34,36 +34,7 @@ function getModelMeta(name: string) {
 }
 
 export default function ModelSelector() {
-  const { activeModel, setActiveModel } = useStore();
-  const [installedModels, setInstalledModels] = useState<string[]>([]);
-  const [ollamaOnline, setOllamaOnline] = useState<boolean | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  // Fetch installed models from backend on mount
-  useEffect(() => {
-    const fetchModels = async () => {
-      try {
-        const res = await fetch("http://localhost:8001/models");
-        const data = await res.json();
-        setOllamaOnline(data.online);
-        const names: string[] = data.models.map((m: { name: string }) => m.name);
-        setInstalledModels(names);
-        // Auto-select first installed model if current isn't installed
-        if (names.length > 0 && !names.includes(activeModel)) {
-          setActiveModel(names[0]);
-        }
-      } catch {
-        setOllamaOnline(false);
-        setInstalledModels([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchModels();
-    // Refresh every 30s
-    const interval = setInterval(fetchModels, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  const { activeModel, setActiveModel, installedModels, ollamaOnline, modelsLoading: loading } = useStore();
 
   const current = getModelMeta(activeModel);
 
