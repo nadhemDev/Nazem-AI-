@@ -18,6 +18,7 @@ const MODEL_META: Record<string, { label: string; sublabel: string; color: strin
   "mistral:7b":          { label: "Mistral · 7B",           sublabel: "Puissant · Meilleure qualité",     color: "text-rose-400",    badge: "PRO",   badgeColor: "bg-rose-500/20 text-rose-300",      icon: <Brain size={12} className="text-rose-400" /> },
   "deepseek-r1:1.5b":    { label: "DeepSeek R1 · 1.5B",     sublabel: "Raisonnement · Compact",           color: "text-indigo-400",  badge: "R1",    badgeColor: "bg-indigo-500/20 text-indigo-300",  icon: <Brain size={12} className="text-indigo-400" /> },
   "deepseek-r1:7b":      { label: "DeepSeek R1 · 7B",       sublabel: "Raisonnement · Avancé",            color: "text-indigo-500",  badge: "R1",    badgeColor: "bg-indigo-600/20 text-indigo-400",  icon: <Brain size={12} className="text-indigo-500" /> },
+  "llava":               { label: "LLaVA · Vision",         sublabel: "Analyse d'images avancée",         color: "text-orange-400",  badge: "VISION",badgeColor: "bg-orange-500/20 text-orange-300",  icon: <Zap size={12} className="text-orange-400" /> },
 };
 
 function getModelMeta(name: string) {

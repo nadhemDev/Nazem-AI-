@@ -212,7 +212,32 @@ export default function ChatPanel() {
                           const match = /language-(\w+)/.exec(className || "");
                           const isBlock = !!(match || (String(children).includes('\n')));
                           const lang = match?.[1] ?? "";
+                          
                           if (isBlock) {
+                            // --- MAGIC INTERCEPTION: Hide raw tool call JSON ---
+                            if (lang === "json" || lang === "") {
+                              try {
+                                const parsed = JSON.parse(String(children));
+                                if (parsed.name && typeof parsed.name === 'string' && parsed.name.startsWith('tool_')) {
+                                  return (
+                                    <div className="my-3 p-3 rounded-xl border border-indigo-500/20 bg-indigo-500/10 flex flex-col gap-2 text-indigo-300 shadow-inner">
+                                      <div className="flex items-center gap-2">
+                                        <RefreshCw size={14} className="animate-spin text-indigo-400" />
+                                        <span className="text-sm font-semibold">Exécution d'outil</span>
+                                      </div>
+                                      <div className="text-xs font-mono bg-black/20 p-2 rounded">
+                                        <span className="text-indigo-400">{parsed.name}</span>
+                                        {parsed.arguments && <span className="text-slate-400">({JSON.stringify(parsed.arguments)})</span>}
+                                      </div>
+                                    </div>
+                                  );
+                                }
+                              } catch {
+                                // Not a valid tool JSON, continue normal rendering
+                              }
+                            }
+                            // --------------------------------------------------
+
                             return (
                               <div className="my-3 rounded-xl overflow-hidden border border-white/10 bg-[#0d1117]">
                                 {lang && (
@@ -274,7 +299,7 @@ export default function ChatPanel() {
                         ),
                       }}
                     >
-                      {msg.content}
+                      {msg.content.replace(/<think>([\s\S]*?)(?:<\/think>|$)/g, '\n\n> 🧠 **Raisonnement (Deep Think) :**\n> $1\n\n')}
                     </ReactMarkdown>
                   </div>
                 )}
