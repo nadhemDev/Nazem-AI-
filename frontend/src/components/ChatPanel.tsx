@@ -2,12 +2,30 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useStore } from "@/store/useStore";
-import { Send, Bot, User, Zap, AlertCircle, Copy, Check, RefreshCw } from "lucide-react";
+import { Send, Bot, User, Zap, AlertCircle, Copy, Check, RefreshCw, Terminal } from "lucide-react";
 import ModelSelector from "./ModelSelector";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
+import "highlight.js/styles/github-dark.css";
+
+function CopyCodeButton({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={() => { navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+      className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-emerald-400 transition-colors"
+    >
+      {copied ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
+      {copied ? "Copié !" : "Copier"}
+    </button>
+  );
+}
 
 export default function ChatPanel() {
   const { messages, addMessage, activeModel } = useStore();
   const [input, setInput] = useState("");
+
   const [isLoading, setIsLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -46,7 +64,7 @@ export default function ChatPanel() {
     const nazemId = (Date.now() + 1).toString();
 
     try {
-      const response = await fetch("http://localhost:8000/chat/message", {
+      const response = await fetch("http://localhost:8001/chat/message", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userMessage, model: activeModel }),
@@ -97,7 +115,7 @@ export default function ChatPanel() {
       addMessage({
         id: (Date.now() + 2).toString(),
         sender: "system",
-        content: "Impossible de joindre le serveur local. Vérifiez que le backend tourne sur le port 8000.",
+        content: "Impossible de joindre le serveur local. Vérifiez que le backend tourne sur le port 8001.",
       });
       setIsLoading(false);
     }
@@ -148,39 +166,120 @@ export default function ChatPanel() {
         )}
 
         {messages.map((msg) => (
-          <div key={msg.id} className={`flex gap-4 group ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
+          <div key={msg.id} className={`flex gap-3 group ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
             {/* Avatar */}
-            <div className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold shadow-lg
+            <div className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center shadow-lg
               ${msg.sender === "user"
-                ? "bg-nazem-teal"
+                ? "bg-gradient-to-br from-indigo-500 to-purple-600"
                 : msg.sender === "system"
-                ? "bg-rose-500"
-                : "bg-nazem-pink"
+                ? "bg-gradient-to-br from-rose-600 to-red-800"
+                : "bg-gradient-to-br from-emerald-500 to-teal-600"
               }`}>
               {msg.sender === "user" ? (
-                <User size={16} className="text-white" />
+                <User size={15} className="text-white" />
               ) : msg.sender === "system" ? (
-                <AlertCircle size={16} className="text-white" />
+                <AlertCircle size={15} className="text-white" />
               ) : (
-                <Bot size={16} className="text-white" />
+                <Bot size={15} className="text-white" />
               )}
             </div>
 
             {/* Bubble */}
-            <div className={`flex flex-col max-w-[75%] ${msg.sender === "user" ? "items-end" : "items-start"}`}>
-              <span className="text-[11px] font-semibold text-slate-500 mb-1.5 px-1">
+            <div className={`flex flex-col ${msg.sender === "user" ? "items-end max-w-[70%]" : "items-start max-w-[82%]"}`}>
+              <span className="text-[10px] font-semibold text-slate-500 mb-1.5 px-1 uppercase tracking-wider">
                 {msg.sender === "user" ? "Vous" : msg.sender === "system" ? "Système" : "Nazem"}
               </span>
-              <div className={`relative rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-lg
-                ${msg.sender === "user"
-                  ? "bg-nazem-teal text-white rounded-tr-sm"
-                  : msg.sender === "system"
-                  ? "bg-rose-100 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/40 rounded-tl-sm"
-                  : "bg-slate-100 dark:bg-slate-800/70 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-white/5 rounded-tl-sm backdrop-blur-sm"
-                }`}>
-                <pre className="whitespace-pre-wrap font-sans break-words">{msg.content}</pre>
 
-                {/* Copy button for nazem messages */}
+              <div className={`relative text-sm leading-relaxed shadow-lg
+                ${msg.sender === "user"
+                  ? "bg-gradient-to-br from-indigo-600 to-purple-700 text-white rounded-2xl rounded-tr-sm px-4 py-3"
+                  : msg.sender === "system"
+                  ? "bg-rose-950/60 text-rose-300 border border-rose-800/50 rounded-2xl rounded-tl-sm px-4 py-3"
+                  : "bg-slate-800/80 text-slate-100 border border-white/8 rounded-2xl rounded-tl-sm backdrop-blur-sm overflow-hidden"
+                }`}>
+
+                {msg.sender === "user" || msg.sender === "system" ? (
+                  <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                ) : (
+                  // Beautiful markdown rendering for Nazem messages
+                  <div className="markdown-body px-4 py-3">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeHighlight]}
+                      components={{
+                        // Code blocks
+                        code({ node, className, children, ...props }: React.ComponentProps<'code'> & { node?: unknown; inline?: boolean }) {
+                          const match = /language-(\w+)/.exec(className || "");
+                          const isBlock = !!(match || (String(children).includes('\n')));
+                          const lang = match?.[1] ?? "";
+                          if (isBlock) {
+                            return (
+                              <div className="my-3 rounded-xl overflow-hidden border border-white/10 bg-[#0d1117]">
+                                {lang && (
+                                  <div className="flex items-center justify-between px-4 py-2 bg-slate-900/80 border-b border-white/8">
+                                    <div className="flex items-center gap-2">
+                                      <Terminal size={12} className="text-slate-500" />
+                                      <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">{lang}</span>
+                                    </div>
+                                    <CopyCodeButton code={String(children)} />
+                                  </div>
+                                )}
+                                <code className={`block p-4 text-[13px] font-mono overflow-x-auto ${className || ""}`} {...props}>
+                                  {children}
+                                </code>
+                              </div>
+                            );
+                          }
+                          return (
+                            <code className="px-1.5 py-0.5 rounded-md bg-slate-700/80 text-emerald-300 font-mono text-[13px]" {...props}>
+                              {children}
+                            </code>
+                          );
+                        },
+                        // Headings
+                        h1: ({ children }) => <h1 className="text-xl font-bold text-white mt-4 mb-2 pb-1 border-b border-white/10">{children}</h1>,
+                        h2: ({ children }) => <h2 className="text-lg font-semibold text-white mt-3 mb-2">{children}</h2>,
+                        h3: ({ children }) => <h3 className="text-base font-semibold text-slate-200 mt-3 mb-1">{children}</h3>,
+                        // Paragraphs
+                        p: ({ children }) => <p className="mb-3 last:mb-0 text-slate-200 leading-relaxed">{children}</p>,
+                        // Lists
+                        ul: ({ children }) => <ul className="mb-3 pl-5 space-y-1 list-disc marker:text-emerald-500">{children}</ul>,
+                        ol: ({ children }) => <ol className="mb-3 pl-5 space-y-1 list-decimal marker:text-emerald-500">{children}</ol>,
+                        li: ({ children }) => <li className="text-slate-200">{children}</li>,
+                        // Blockquote
+                        blockquote: ({ children }) => (
+                          <blockquote className="my-3 pl-4 border-l-2 border-emerald-500 bg-emerald-500/5 py-2 pr-3 rounded-r-lg text-slate-300 italic">
+                            {children}
+                          </blockquote>
+                        ),
+                        // Table
+                        table: ({ children }) => (
+                          <div className="my-3 overflow-x-auto rounded-lg border border-white/10">
+                            <table className="w-full text-sm">{children}</table>
+                          </div>
+                        ),
+                        th: ({ children }) => <th className="px-3 py-2 bg-slate-700/60 text-slate-200 font-semibold text-left border-b border-white/10">{children}</th>,
+                        td: ({ children }) => <td className="px-3 py-2 text-slate-300 border-b border-white/5">{children}</td>,
+                        // Horizontal rule
+                        hr: () => <hr className="my-4 border-white/10" />,
+                        // Strong / em
+                        strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
+                        em: ({ children }) => <em className="italic text-slate-300">{children}</em>,
+                        // Links
+                        a: ({ href, children }) => (
+                          <a href={href} target="_blank" rel="noopener noreferrer"
+                            className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2 transition-colors">
+                            {children}
+                          </a>
+                        ),
+                      }}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
+                  </div>
+                )}
+
+                {/* Copy full message button */}
                 {msg.sender === "nazem" && (
                   <button
                     onClick={() => handleCopy(msg.id, msg.content)}

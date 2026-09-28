@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+﻿from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from langchain_core.messages import HumanMessage
@@ -13,10 +13,6 @@ class ChatRequest(BaseModel):
 
 @router.post("/message")
 async def send_chat_message(req: ChatRequest):
-    """
-    Receives a user message, invokes the LangGraph ReAct agent, and streams the response back.
-    Streams token-by-token using astream_events.
-    """
     agent = get_agent(req.model)
 
     async def event_generator():
@@ -27,25 +23,26 @@ async def send_chat_message(req: ChatRequest):
                 version="v2"
             ):
                 kind = event.get("event", "")
-                # Stream AI message tokens
                 if kind == "on_chat_model_stream":
                     chunk = event.get("data", {}).get("chunk")
-                    if chunk and hasattr(chunk, "content") and chunk.content:
-                        token = chunk.content
-                        full_response += token
-                        yield f"data: {json.dumps({'token': token, 'done': False})}\n\n"
+                    if not chunk:
+                        continue
+                    if getattr(chunk, "tool_call_chunks", None):
+                        continue
+                    content = getattr(chunk, "content", "")
+                    if not content:
+                        continue
+                    full_response += content
+                    yield "data: " + json.dumps({"token": content, "done": False}) + "\n\n"
 
-            # Signal completion
-            yield f"data: {json.dumps({'token': '', 'done': True, 'full': full_response})}\n\n"
+            yield "data: " + json.dumps({"token": "", "done": True, "full": full_response}) + "\n\n"
 
         except Exception as e:
-            yield f"data: {json.dumps({'token': f'Erreur: {str(e)}', 'done': True, 'full': f'Erreur: {str(e)}'})}\n\n"
+            err = str(e)
+            yield "data: " + json.dumps({"token": "Erreur: " + err, "done": True, "full": "Erreur: " + err}) + "\n\n"
 
     return StreamingResponse(
         event_generator(),
         media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no",
-        }
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
